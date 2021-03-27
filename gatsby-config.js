@@ -1,10 +1,6 @@
-/**
- * Configure your Gatsby site with this file.
- *
- * See: https://www.gatsbyjs.com/docs/gatsby-config/
- */
+const projectName = require('./package.json').name
 
 module.exports = {
-  /* Your site config here */
+  pathPrefix: `/${projectName}`,
   plugins: ['gatsby-plugin-eslint', 'gatsby-theme-mdx-deck'],
 }
