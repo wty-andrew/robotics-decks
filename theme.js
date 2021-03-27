@@ -1,12 +1,6 @@
-import React from 'react'
-import { Prism } from 'react-syntax-highlighter'
-import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism'
-import { getLanguage, pre } from '@mdx-deck/themes/syntax-highlighter'
+import { pre } from '@mdx-deck/themes/syntax-highlighter'
 
-const code = (props) => {
-  const language = getLanguage(props.className)
-  return <Prism language={language} style={tomorrow} {...props} />
-}
+import code from './src/components/Code'
 
 export default {
   colors: {
@@ -14,10 +8,51 @@ export default {
     background: '#ffffff',
     link: '#448aff',
     codeColor: '#ebedf0',
+    modes: {
+      dark: {
+        text: '#ffffff',
+        background: '#18191A',
+        codeColor: '#444950',
+      },
+    },
   },
   googleFont: 'https://fonts.googleapis.com/css?family=Montserrat',
   fonts: {
     body: '"Montserrat", serif',
+  },
+  custom: {
+    fullscreen: {
+      width: '100vw',
+      height: '100vh',
+      position: 'absolute',
+      left: 0,
+      top: 0,
+      overflow: 'auto',
+    },
+    responsive_padding: {
+      paddingLeft: [null, '64px', '112px', '160px'],
+      paddingRight: [null, '64px', '112px', '160px'],
+      '@media print': {
+        padding: '10%',
+      },
+    },
+    responsive_padding_important: {
+      paddingLeft: [
+        null,
+        '64px !important',
+        '112px !important',
+        '160px !important',
+      ],
+      paddingRight: [
+        null,
+        '64px !important',
+        '112px !important',
+        '160px !important',
+      ],
+      '@media print': {
+        padding: '10% !important',
+      },
+    },
   },
   styles: {
     blockquote: {
@@ -72,15 +107,11 @@ export default {
       objectFit: 'cover',
     },
     Slide: {
+      variant: 'custom.responsive_padding',
       fontSize: '2em',
       display: 'block',
       lineHeight: 'body',
       padding: '1em',
-      paddingLeft: [null, '64px', '112px', '160px'],
-      paddingRight: [null, '64px', '112px', '160px'],
-      '@media print': {
-        padding: '10%',
-      },
       textAlign: 'left',
     },
   },

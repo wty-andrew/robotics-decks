@@ -1,7 +1,7 @@
 import Tex from '@matejmazur/react-katex'
 import { Embed } from 'theme-ui'
 
-import { Hero, PseudoCode, FullScreenCodeBlock } from '../src/components'
+import { Hero, PseudoCode, FullScreenCodeBlock, CodeSurfer } from '../src/components'
 
 import customTheme from '../theme'
 export const theme = customTheme
@@ -34,6 +34,54 @@ ReactDOM.render(
 ```
 
 </FullScreenCodeBlock>
+
+---
+import pythonSnippet from '!raw-loader!../src/snippets/sample.py'
+
+<CodeSurfer
+  language={'python'}
+  code={pythonSnippet}
+  customStyle={{ fontSize: '1.4rem' }}
+  steps={[
+    { title: 'Code Surfer Example' },
+    {
+      note: 'A class to represent a location in 2-D.',
+      highlightLines: '4-7',
+    },
+    {
+      title: 'Calculate euclidean distance',
+      note: () => (
+        <div>
+          From Pythagorean Theorem:
+          <Tex>{String.raw`\quad a^2 + b^2 = c^2`}</Tex>
+        </div>
+      ),
+      highlightLines: '9,10',
+    },
+  ]}
+/>
+
+---
+import reactSnippet from '!!raw-loader!../src/snippets/sample.js'
+import reactJSXSnippet from '!!raw-loader!../src/snippets/sample2.js'
+
+<CodeSurfer
+  language={'javascript'}
+  customStyle={{ fontSize: '1.4rem' }}
+  title={'Diff Example'}
+  steps={[
+    {
+      note: 'React without JSX',
+      code: reactSnippet,
+    },
+    {
+      note: 'JSX allows us to write HTML directly within the JavaScript code.',
+      code: reactJSXSnippet,
+      removedLines: '3,9',
+      addedLines: '4,10',
+    },
+  ]}
+/>
 
 ---
 
