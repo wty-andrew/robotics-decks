@@ -33,6 +33,8 @@ const Home = () => {
       <Flex css={{ justifyContent: 'center', padding: '2.5rem 0' }}>
         <Heading as="h1">Robotics Decks</Heading>
       </Flex>
+
+      <Card title="Karto SLAM" url="/karto-slam" />
     </Box>
   )
 }

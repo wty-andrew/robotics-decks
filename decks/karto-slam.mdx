@@ -1,0 +1,460 @@
+import Tex from '@matejmazur/react-katex'
+
+import { Hero, FullScreenCodeBlock, CodeSurfer, CodeTitle } from '../src/components'
+
+import customTheme from '../theme'
+export const theme = customTheme
+
+<Hero title="Karto SLAM" />
+
+---
+
+# Outline
+- Incremental Mapping of Large Cyclic Environments
+- Real-Time Correlative Scan Matching
+- Efficient Sparse Pose Adjustment for 2D Mapping
+
+---
+
+# Outline
+- **Incremental Mapping of Large Cyclic Environments**
+- Real-Time Correlative Scan Matching
+- Efficient Sparse Pose Adjustment for 2D Mapping
+
+---
+
+## Incremental Mapping of Large Cyclic Environments
+Propose the Local Registration and Global Correlation (LRGC) method which
+- adds new information to the current map efficiently
+- determines topologically correct relations between the poses
+
+---
+import consistentPoseEstimationImg from '../src/images/karto-slam/consistent-pose-estimation.png'
+
+## Consistent Pose Estimation
+
+<img src={consistentPoseEstimationImg} style={{ maxHeight: '50vh', objectFit: 'contain', marginBottom: '-1em' }} />
+
+Consider the full pose set in system and try to minimize the total error, can work on cyclic environments
+
+---
+import localRegistrationImg from '../src/images/karto-slam/local-registration.png'
+
+## Local Registration and Global Correlation
+
+<img src={localRegistrationImg} style={{ maxHeight: '45vh', objectFit: 'contain', marginBottom: '-0.5em' }} />
+
+A newly added pose will have a link to the previous pose and also to several of the previous poses based on scan overlaps
+
+---
+import mapCorrelationImg from '../src/images/karto-slam/map-correlation.png'
+
+## Local Registration and Global Correlation
+
+<div style={{ display: 'flex'}}>
+  <img src={mapCorrelationImg} style={{ maxWidth: '30vw', maxHeight: '60vh', objectFit: 'contain' }} />
+
+  <div>
+    Try to find loop closure by comparing a set of local scans with the old map
+    <br /><br />
+    <Tex>{String.raw`\scriptsize l\text{: robot pose}, r\text{: map patch}, m\text{: old map}`}</Tex>
+    <Tex block>{String.raw`
+      \begin{aligned}
+        p(l | r, m) & = k \cdot \underbrace{p(r | l, m)}_{\text{sensor response}} p(l, m)\\
+        p(r | l, m) & \approx \sum_i{p(r_i)p(m_i)}
+      \end{aligned}
+    `}</Tex>
+  </div>
+</div>
+
+---
+
+## Local Registration and Global Correlation
+It's not possible to undo the correction operation so false positive rejection is critical, some good criteria are
+- High match score
+- Low ambiguity, the ratio of the highest peak to the next highest should be large
+- Low variance
+
+---
+import incrementalMappingDataFlowImg from '../src/images/karto-slam/incremental-mapping-data-flow.png'
+
+## Incremental, Consistent Mapping
+
+<img src={incrementalMappingDataFlowImg} style={{ maxHeight: '70%', objectFit: 'contain' }} />
+
+---
+import mapperProcessSnippet from '!raw-loader!../src/snippets/karto-slam/mapper_process.cpp'
+
+<CodeSurfer
+  language={'cpp'}
+  customStyle={{ fontSize: '1rem' }}
+  style={{ gridTemplateRows: '10% 1fr 20%' }}
+  title={() => <CodeTitle title="slam_toolbox/lib/karto_sdk/src/Mapper.cpp" />}
+  steps={[
+    {
+      code: mapperProcessSnippet,
+      note: 'The Process function is triggered when a laser scan is received',
+    },
+    {
+      code: mapperProcessSnippet,
+      note: 'The scan will be linked with previous scan, running scans, and near chains of scans',
+      highlightLines: '10',
+    },
+    {
+      code: mapperProcessSnippet,
+      note: 'Loop detection is activated with each new scan',
+      highlightLines: '15',
+    },
+  ]}
+/>
+
+---
+import tryCloseLoopSnippet from '!raw-loader!../src/snippets/karto-slam/try_close_loop.cpp'
+
+<CodeSurfer
+  language={'cpp'}
+  customStyle={{ fontSize: '1rem' }}
+  style={{ gridTemplateRows: '10% 1fr 20%' }}
+  title={() => <CodeTitle title="slam_toolbox/lib/karto_sdk/src/Mapper.cpp" />}
+  steps={[
+    {
+      code: tryCloseLoopSnippet,
+      note: 'There are two ScanMatcher instances used to find the best pose/response',
+      highlightLines: '5,6,11,12',
+    },
+    {
+      code: tryCloseLoopSnippet,
+      note: () => (
+        <table style={{ fontSize: '0.6em' }}>
+          <thead>
+            <tr>
+              <th>Scan Matcher</th>
+              <th>Search Dimension</th>
+              <th>Search Resolution</th>
+              <th>Smear Deviation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>sequential</td>
+              <td>0.5 meters</td>
+              <td>0.01 meters</td>
+              <td>0.01 meters</td>
+            </tr>
+            <tr>
+              <td>loop</td>
+              <td>8 meters</td>
+              <td>0.05 meters</td>
+              <td>0.03 meters</td>
+            </tr>
+          </tbody>
+        </table>
+      ),
+      highlightLines: '5,6,11,12',
+    },
+    {
+      code: tryCloseLoopSnippet,
+      note: 'False positive rejection',
+      highlightLines: '7-9,13',
+    },
+  ]}
+/>
+
+---
+
+# Outline
+- Incremental Mapping of Large Cyclic Environments
+- **Real-Time Correlative Scan Matching**
+- Efficient Sparse Pose Adjustment for 2D Mapping
+
+---
+
+## Real-Time Correlative Scan Matching
+Advocate a probabilistically-motivated scan matching approach based upon correlations
+
+---
+import graphicalModelForProbabilisticScanMatchingImg from '../src/images/karto-slam/graphical-model-for-probabilistic-scan-matching.png'
+
+## Probabilistic Formulation
+
+<img src={graphicalModelForProbabilisticScanMatchingImg} style={{ maxHeight: '50vh', objectFit: 'contain', marginBottom: '-1em' }} />
+
+<Tex block>{String.raw`
+  p(x_i | x_{i-1}, u, m, z) \propto \underbrace{p(z | x_i, m)}_{\text{observation model}} \underbrace{p(x_i | x_{i-1}, u)}_{\text{motion model}}
+`}</Tex>
+
+---
+
+## Probabilistic Formulation
+
+<p>
+  Assume each individual lidar return <Tex>{String.raw`z_j`}</Tex> is independent
+</p>
+
+<Tex block>{String.raw`
+  \begin{aligned}
+    p(z | x_i, m) & = \prod_j p(z_j | x_i, m) \\
+    \implies \log{p(z | x_i, m)} & = \sum_j \log{p(z_j | x_i, m)}
+  \end{aligned}
+`}</Tex>
+
+---
+
+## Lookup-Table Rasterization
+
+- Precompute lookup table containing log probabilities of lidar observation at each position in the world
+- Approximate the potentially banana-shaped distribution arising from the sensor model as a radially-symmetric distribution
+
+---
+import scanMatcherGetResponseSnippet from '!raw-loader!../src/snippets/karto-slam/scan_matcher_get_response.cpp'
+import calculateKernelSnippet from '!raw-loader!../src/snippets/karto-slam/calculate_kernel.cpp'
+import smearPointSnippet from '!raw-loader!../src/snippets/karto-slam/smear_point.cpp'
+
+<CodeSurfer
+  language={'cpp'}
+  customStyle={{ fontSize: '1.2rem' }}
+  style={{ gridTemplateRows: '10% 1fr 20%' }}
+  title={() => <CodeTitle title="slam_toolbox/lib/karto_sdk/src/Mapper.cpp" />}
+  steps={[
+    {
+      code: smearPointSnippet,
+      note: 'SmearPoint is called when building CorrelationGrid, it applies the kernel at each occupied cell',
+    },
+    {
+      code: smearPointSnippet,
+      note: 'The probabilities of nearby points of an occupied cell are raised to kernel value',
+      highlightLines: '11,12',
+    },
+    {
+      code: calculateKernelSnippet,
+      note: () =>
+        <div>
+          The used kernel is Gaussian: &nbsp;
+          <Tex>{String.raw`
+            g(x,y) = \frac{1}{2\pi \sigma^2} \mathrm{e}^{-\frac{x^2 + y^2}{2\sigma^2}}
+          `}</Tex>
+        </div>,
+      highlightLines: '6,7',
+    },
+    {
+      code: scanMatcherGetResponseSnippet,
+      note: 'The response is calculated by adding up the probabilities stored in CorrelationGrid',
+      highlightLines: '3,7-10',
+    },
+  ]}
+/>
+
+---
+
+## Multi-Level Resolution Implementation
+- Brute Force
+- Computing 2D Slices
+- Multi-Level Resolution
+
+---
+import matchScanSnippet from '!raw-loader!../src/snippets/karto-slam/match_scan.cpp'
+import correlateScanSnippet from '!raw-loader!../src/snippets/karto-slam/correlate_scan.cpp'
+import computeOffsetsSnippet from '!raw-loader!../src/snippets/karto-slam/compute_offsets.cpp'
+
+<CodeSurfer
+  language={'cpp'}
+  customStyle={{ fontSize: '1rem' }}
+  style={{ gridTemplateRows: '10% 1fr 20%' }}
+  steps={[
+    {
+      code: matchScanSnippet,
+      title: () => <CodeTitle title="slam_toolbox/lib/karto_sdk/src/Mapper.cpp" />,
+      note: 'CorrelateScan are performed at different resolution, the search center of fine scan comes from the result of coarse scan',
+      highlightLines: '4-7,12-14',
+    },
+    {
+      code: computeOffsetsSnippet,
+      title: () => <CodeTitle title="slam_toolbox/lib/karto_sdk/include/karto_sdk/Karto.h" />,
+      note: 'ComputeOffsets caches the relative offsets into LookupArray for each "search" angle',
+      highlightLines: '2-4',
+    },
+    {
+      code: computeOffsetsSnippet,
+      title: () => <CodeTitle title="slam_toolbox/lib/karto_sdk/include/karto_sdk/Karto.h" />,
+      note: 'Each search angle has n entries where n is the number of readings from a single scan',
+      highlightLines: '2,6,14',
+    },
+    {
+      code: correlateScanSnippet,
+      title: () => <CodeTitle title="slam_toolbox/lib/karto_sdk/src/Mapper.cpp" />,
+      note: 'CorrelateScan finds the highest response by searching through all the x, y, θ combination in search space',
+      highlightLines: '6-15',
+    },
+  ]}
+/>
+
+---
+
+# Outline
+- Incremental Mapping of Large Cyclic Environments
+- Real-Time Correlative Scan Matching
+- **Efficient Sparse Pose Adjustment for 2D Mapping**
+
+---
+
+## Efficient Sparse Pose Adjustment for 2D Mapping
+Propose an efficient approach for optimizing 2D pose graphs that uses direct sparse Cholesky decomposition to solve the linear system
+
+---
+
+## Pose Graph
+- Nodes: robot poses, landmarks
+- Edges: measurements as constraints
+
+Goal: Jointly optimize the poses of the nodes so as to minimize the error introduced by the contraint
+
+---
+import graphBasedSLAMSystemImg from '../src/images/karto-slam/graph-based-slam-system.png'
+
+## Graph-Based SLAM System
+
+<img src={graphBasedSLAMSystemImg} />
+
+- front-end: data association
+- back-end: robot poses correction
+
+---
+
+## Sparse Pose Adjustment (SPA)
+Efficiently compute the sparse matrix from the constraint graph, and use direct sparse linear methods to solve it
+
+---
+
+## Error Formulation
+
+<div>
+  <Tex>{String.raw`\bold{c}`}</Tex>&nbsp;: the set of global poses, &nbsp;
+  <Tex>{String.raw`c_i = [t_i, \theta_i] = [x_i, y_i, \theta_i]^\top`}</Tex>
+</div>
+
+<Tex block>{String.raw`
+  h(c_i, c_j) \equiv
+  \begin{cases}
+    R^\top_i (t_j - t_i) \\
+    \theta_j - \theta_i
+  \end{cases}
+`}</Tex>
+
+<Tex block>{String.raw`
+  \begin{aligned}
+    e_{ij}                      & \equiv \bar{z}_{ij} - h(c_i, c_j) \\
+    \chi^2 (\bold{c}, \bold{p}) & \equiv \sum_{ij} e^\top_{ij} \Lambda_{ij} e_{ij}
+  \end{aligned}
+`}</Tex>
+
+---
+import poseGraph2dErrorTermSnippet from '!raw-loader!../src/snippets/karto-slam/pose_graph_2d_error_term.cpp'
+
+<CodeSurfer
+  language={'cpp'}
+  code={poseGraph2dErrorTermSnippet}
+  customStyle={{ fontSize: '1rem' }}
+  style={{ gridTemplateRows: '10% 1fr 20%' }}
+  title={() => <CodeTitle title="slam_toolbox/solvers/ceres_utils.h" />}
+  steps={[
+    {},
+    {
+      note: () => <Tex>{String.raw`\\e_{ij} \equiv h(c_i, c_j) - \bar{z}_{ij}`}</Tex>,
+      highlightLines: '9-11',
+    },
+    {
+      note: () =>
+        <Tex>{String.raw`
+          h(c_i, c_j) \equiv
+          \begin{cases}
+            R^\top_i (t_j - t_i) \\
+            \theta_j - \theta_i
+          \end{cases}
+        `}</Tex>,
+      highlightLines: '10,11',
+    },
+    {
+      note: () => <div>Note the angle difference must be normalized to &nbsp;<Tex>{String.raw`[-\pi,\pi)`}</Tex></div>,
+      highlightLines: '11',
+    },
+    {
+      note: () => <div>Account for &nbsp;<Tex>{String.raw`e^\top_{ij} \Lambda_{ij} e_{ij}`}</Tex></div>,
+      highlightLines: '13',
+    }
+  ]}
+/>
+
+---
+
+## Linear System
+
+<div style={{ fontSize: '0.8em' }}>
+
+<Tex block>{String.raw`
+  \begin{aligned}
+    \bold{\Lambda} & \equiv
+      \begin{bmatrix}
+        \Lambda_{ab} &        & \\
+                     & \ddots & \\
+                     &        & \Lambda_{mn}
+      \end{bmatrix} \\[3ex]
+    \bold{J} & \equiv \frac{\partial{\bold{e}}}{\partial{\bold{x}}} \\[1.5ex]
+    \bold{H} & \equiv \bold{J}^\top \bold{\Lambda} \bold{J} \\
+  \end{aligned}
+`}</Tex>
+
+The large sparse linear problem is solved by Levenberg-Marquardt
+
+<Tex block>{String.raw`
+  (\bold{H} + \lambda \textit{diag} \bold{H})\Delta \bold{x} = \bold{J}^\top \bold{\Lambda} \bold{e}
+`}</Tex>
+
+</div>
+
+---
+
+## Error Jacobians
+The Jacobians of the measurement function
+
+<Tex block>{String.raw`
+  \begin{aligned}
+    \frac{\partial{e_{ij}}}{\partial{t_i}} & \equiv
+      \begin{bmatrix}
+        -R^\top_i \\
+        0\enspace 0
+      \end{bmatrix} \\
+    \frac{\partial{e_{ij}}}{\partial{t_j}} & \equiv
+      \begin{bmatrix}
+        R^\top_i \\
+        0\enspace 0
+      \end{bmatrix}
+  \end{aligned}
+  \quad
+  \begin{aligned}
+    \frac{\partial{e_{ij}}}{\partial{\theta_i}} & \equiv
+      \begin{bmatrix}
+        -\frac{\partial{R^\top_i}}{\partial{\theta_i}}(t_j - t_i) \\
+        -1
+      \end{bmatrix} \\
+    \frac{\partial{e_{ij}}}{\partial{\theta_j}} & \equiv
+      \begin{bmatrix}
+        0 & 0 & 1
+      \end{bmatrix}^\top
+  \end{aligned}
+`}</Tex>
+
+In the implementation, the [AutoDiffCostFunction](http://ceres-solver.org/nnls_modeling.html#autodiffcostfunction)
+is used instead of providing the analytic derivatives
+
+---
+
+## References
+
+<div style={{ fontSize: '.65em' }}>
+
+- Gutmann, J.-S., & Konolige, K. (n.d.). Incremental mapping of large cyclic environments. Proceedings 1999 IEEE International Symposium on Computational Intelligence in Robotics and Automation. CIRA’99 (Cat. No.99EX375), 318–325. https://doi.org/10.1109/CIRA.1999.810068
+- Olson, E. B. (2009). Real-time correlative scan matching. 2009 IEEE International Conference on Robotics and Automation, 68(6), 4387–4393. https://doi.org/10.1109/ROBOT.2009.5152375
+- Konolige, K., Grisetti, G., Kümmerle, R., Burgard, W., Limketkai, B., & Vincent, R. (2010). Efficient sparse pose adjustment for 2D mapping. IEEE/RSJ 2010 International Conference on Intelligent Robots and Systems, IROS 2010 - Conference Proceedings, 22–29. https://doi.org/10.1109/IROS.2010.5649043
+- S. Macenski, slam_toolbox, (2020), GitHub repository, https://github.com/SteveMacenski/slam_toolbox
+
+</div>
