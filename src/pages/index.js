@@ -31,11 +31,8 @@ const Home = () => {
   return (
     <Box css={{ maxWidth: 600, margin: 'auto', fontFamily: 'sans-serif' }}>
       <Flex css={{ justifyContent: 'center', padding: '2.5rem 0' }}>
-        <Heading as="h1">Gatsby MDX-Deck Template</Heading>
+        <Heading as="h1">Robotics Decks</Heading>
       </Flex>
-
-      <Card title="Markdown" url="/markdown" />
-      <Card title="Misc" url="/misc" />
     </Box>
   )
 }

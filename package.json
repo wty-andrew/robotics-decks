@@ -1,7 +1,7 @@
 {
-  "name": "gatsby-mdx-deck-template",
+  "name": "robotics-decks",
   "private": true,
-  "description": "A starter for gatsby-theme-mdx-deck",
+  "description": "Robotics related decks",
   "version": "0.1.0",
   "license": "MIT",
   "scripts": {
