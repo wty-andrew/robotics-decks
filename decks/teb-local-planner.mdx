@@ -1,0 +1,212 @@
+import Tex from '@matejmazur/react-katex'
+
+import { Hero, FullScreenCodeBlock, CodeSurfer, CodeTitle } from '../src/components'
+
+import customTheme from '../theme'
+export const theme = customTheme
+
+<Hero title="TEB Local Planner" />
+
+---
+
+# Outline
+- Model Predictive Control
+- g2o - General Graph Optimization
+- Timed Elastic Band
+- Cost Terms
+
+---
+import timedElasticBandImg from '../src/images/teb-local-planner/timed-elastic-band.png'
+
+## Timed Elastic Band
+
+<div style={{ display: 'flex' }}>
+  <img src={timedElasticBandImg} style={{ maxHeight: '40vh', objectFit: 'contain' }} />
+
+  <Tex block>{String.raw`
+    \begin{aligned}
+      Q    & = \{x_i\}_{i=0 \dots n} \quad \bold{x}_i = (x_i, y_i, \beta_i)^\top \\
+      \tau & = \{\Delta T_i\}_{i=0 \dots n - 1} \\
+      B    & := (Q, \tau)
+    \end{aligned}
+  `}</Tex>
+</div>
+
+The TEB is defined as a tuple of pose sequence (spatial) and time difference (temporal) sequence
+
+---
+import timedElasticBandSnippet from '!raw-loader!../src/snippets/teb-local-planner/timed_elastic_band.h'
+
+<CodeSurfer
+  language={'cpp'}
+  customStyle={{ fontSize: '1.2rem' }}
+  style={{ gridTemplateRows: '10% 1fr 20%' }}
+  title={() => <CodeTitle title="include/teb_local_planner/timed_elastic_band.h" />}
+  steps={[
+    {
+      code: timedElasticBandSnippet,
+      // note: 'The TimedElasticBand store',
+    },
+  ]}
+/>
+
+---
+
+<Tex block>{String.raw`
+  \begin{aligned}
+    f(B) & = \sum_k \gamma_k f_k(B) \\
+    B^*  & = \argmin_B f(B)
+  \end{aligned}
+`}</Tex>
+
+---
+import constraintApproxImg from '../src/images/teb-local-planner/constraint-approximation.png'
+
+## Constraint Approximation
+
+<div style={{ display: 'flex' }}>
+  <img src={constraintApproxImg} style={{ maxHeight: '45vh', objectFit: 'contain' }} />
+
+  <Tex block>{String.raw`
+    \begin{array}{c|ccc}
+                        & x_r & n & S    & \epsilon \\ \hline
+      \text{Approx 1} & 0.4 & 2 & 0.1  & 0.1 \\
+      \text{Approx 2} & 0.4 & 2 & 0.05 & 0.1
+    \end{array}
+  `}</Tex>
+</div>
+
+<Tex block>{String.raw`
+  e_\Gamma (x, x_r, \epsilon, S, n) \simeq
+  \begin{cases}
+    (\frac{x - (x_r - \epsilon)}{S})^n & \text{if } x > x_r - \epsilon \\
+    0 & \text{otherwise}
+  \end{cases}
+`}</Tex>
+
+---
+
+## Cost Terms
+
+<div style={{ display: 'flex', justifyContent: 'space-around' }}>
+
+<div style={{ flexBasis: '50%' }}>
+
+- Objectives
+  - via points
+  - travel time
+
+</div>
+<div style={{ flexBasis: '50%' }}>
+
+- Penalties
+  - limited velocity / acceleration
+  - obstacle avoidance
+
+</div>
+
+</div>
+
+---
+
+## Way Points and Obstacles
+
+<Tex block>{String.raw`
+  \begin{aligned}
+    f_{path} & = e_\Gamma(d_{min,j}, r_{p_{max}}, \epsilon, S, n) \\
+    f_{ob}   & = e_\Gamma(-d_{min,j}, -r_{o_{min}}, \epsilon, S, n)
+  \end{aligned}
+`}</Tex>
+
+---
+
+## Limited Velocity and Acceleration
+
+<Tex block>{String.raw`
+  \begin{aligned}
+    v_{i} & \simeq \frac{1}{\Delta T_i} \left\|
+      \begin{pmatrix}
+        x_{i + 1} - x_i \\
+        y_{i + 1} - y_i
+      \end{pmatrix} \right\| \\
+    w_{i} & \simeq \frac{\beta_{i + 1} - \beta_i}{\Delta T_i}
+  \end{aligned}
+`}</Tex>
+
+<Tex block>{String.raw`
+  a_i = \frac{2(v_{i + 1} - v_i)}{\Delta T_i + \Delta T_{i + 1}}
+`}</Tex>
+
+<Tex block>{String.raw`
+  \begin{aligned}
+    v_{w_r, i} & = v_i + L \omega_i \\
+    v_{w_l, i} & = v_i - L \omega_i
+  \end{aligned}
+`}</Tex>
+
+---
+
+## Non-holonomic Kinematics
+
+<Tex block>{String.raw`
+  \begin{aligned}
+    \theta_i & = \theta_{i + 1} \\
+    \Leftrightarrow
+      \begin{pmatrix}
+        \cos \beta_i \\
+        \sin \beta_i \\
+        0
+      \end{pmatrix}
+      \times \bold{d}_{i, i + 1} & = \bold{d}_{i, i + 1} \times
+      \begin{pmatrix}
+        \cos \beta_{i + 1} \\
+        \sin \beta_{i + 1} \\
+        0
+      \end{pmatrix}
+  \end{aligned}
+`}</Tex>
+
+<Tex>{String.raw`
+  \bold{d}_{i, i + 1} \colonequals
+    \begin{pmatrix}
+      x_{i + 1} - x_i \\
+      y_{i + 1} - y_i \\
+      0
+    \end{pmatrix}
+`}</Tex>
+
+<Tex block>{String.raw`
+  f_k(\bold{x}_i, \bold{x}_{i + 1}) = \left\| \left[
+      \begin{pmatrix}
+        \cos \beta_i \\
+        \sin \beta_i \\
+        0
+      \end{pmatrix}
+      +
+      \begin{pmatrix}
+        \cos \beta_{i + 1} \\
+        \sin \beta_{i + 1} \\
+        0
+      \end{pmatrix}
+  \right] \times \bold{d}_{i, i + 1} \right\|^2
+`}</Tex>
+
+---
+
+## Fastest Path
+
+<Tex>{String.raw`
+  f_k = \left(\displaystyle\sum_{i = 1}^n \Delta T_i \right)^2
+`}</Tex>
+
+---
+
+## References
+
+<div style={{ fontSize: '0.8em' }}>
+
+- Rösmann, C., Feiten, W., Wösch, T., Hoffmann, F., & Bertram, T. (2012). Trajectory modification considering dynamic constraints of autonomous robots. Robotik 2012, 74–79.
+- Rosmann, C., Feiten, W., Wosch, T., Hoffmann, F., & Bertram, T. (2013). Efficient trajectory optimization using a sparse model. 2013 European Conference on Mobile Robots, ECMR 2013 - Conference Proceedings, 138–143. https://doi.org/10.1109/ECMR.2013.6698833
+- C. Rösmann, teb_local_planner, (2019), GitHub repository, https://github.com/rst-tu-dortmund/teb_local_planner
+
+</div>
