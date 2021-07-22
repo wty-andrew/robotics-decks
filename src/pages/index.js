@@ -35,6 +35,7 @@ const Home = () => {
       </Flex>
 
       <Card title="Karto SLAM" url="/karto-slam" />
+      <Card title="Pure Pursuit Planner" url="/pure-pursuit-planner" />
       <Card title="TEB Local Planner (WIP)" url="/teb-local-planner" />
     </Box>
   )

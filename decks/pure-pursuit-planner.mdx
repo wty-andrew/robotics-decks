@@ -1,0 +1,65 @@
+import Tex from '@matejmazur/react-katex'
+
+import { Hero, FullScreenCodeBlock, CodeSurfer, CodeTitle } from '../src/components'
+
+import customTheme from '../theme'
+export const theme = customTheme
+
+<Hero title="Pure Pursuit Planner" />
+
+---
+
+## Pure Pursuit Algorithm
+
+<div style={{ fontSize: '0.95em' }}>
+
+* Find a point on the path with some distance ahead of the robot
+* Rotate in place toward the lookahead point if the angle is too large
+* Calcuate the curvature that will drive the robot toward the lookahead point
+* Send velocity command based on the curvature
+* Repeat above steps until goal position reached
+* Rotate in place toward the goal orientation
+
+</div>
+
+---
+import lookaheadAlgorithmImg from '../src/images/pure-pursuit-planner/lookahead-algorithm.png'
+
+## Pure Pursuit Algorithm
+
+<img src={lookaheadAlgorithmImg} style={{ maxHeight: '70vh', objectFit: 'contain' }}/>
+
+---
+import geometryImg from '../src/images/pure-pursuit-planner/geometry.png'
+
+## Geometry
+
+<span>Relationship between curvature and lookahead distance</span>
+
+<div style={{ display: 'flex' }}>
+  <img src={geometryImg} style={{ maxWidth: '40vw', objectFit: 'contain' }} />
+
+  <Tex block style={{ marginLeft: '5vw', fontSize: '0.9em' }}>{String.raw`
+    \begin{aligned}
+    & x^2 + y^2 = l^2 \\
+    & x + d     = r \\
+    & d^2 + y^2 = r^2 \\
+    \\
+    & (r - x)^2 + y^2 = r^2 \\
+    & r^2 - 2rx + l^2 = r^2 \\
+    & r = \frac{l^2}{2x} \, (\gamma = \frac{2x}{l^2})
+    \end{aligned}
+`}</Tex>
+</div>
+
+---
+
+## References
+
+<div style={{ fontSize: '.8em' }}>
+
+- Coulter, R.C. (1992). Implementation of the Pure Pursuit Path Tracking Algorithm.
+- M. Felix, asr_ftc_local_planner, (2018), ROS Wiki, http://wiki.ros.org/asr_ftc_local_planner
+- S. Singh, S. Macenski, nav2_regulated_pure_pursuit_controller, (2021), GitHub repository, https://github.com/ros-planning/navigation2/tree/main/nav2_regulated_pure_pursuit_controller
+
+</div>
